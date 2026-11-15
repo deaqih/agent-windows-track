@@ -1,0 +1,6 @@
+@page
+@model ErrorModel
+@{ ViewData["Title"] = "Permintaan tidak selesai"; }
+<section class="empty"><p class="eyebrow">Kode @Model.Code</p><h1>@(Model.Code == 403 ? "Akses tidak diizinkan." : Model.Code == 404 ? "Halaman tidak ditemukan." : Model.Code == 429 ? "Terlalu banyak permintaan." : "Permintaan belum dapat diselesaikan.")</h1>
+<p>@(Model.Code == 400 ? "Formulir tidak valid atau sudah kedaluwarsa. Muat ulang halaman sebelum mencoba lagi." : Model.Code == 403 ? "Hubungi admin jika peran akun perlu disesuaikan." : "Periksa alamat atau coba lagi beberapa saat. Perubahan yang gagal belum tentu tersimpan; periksa data sebelum mengulangi.")</p>
+<a class="button" asp-page="/Index">Kembali ke register</a></section>

@@ -1,0 +1,44 @@
+@inject IWebHostEnvironment Runtime
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] | Boneiset</title>
+    <link rel="stylesheet" href="~/site.css" asp-append-version="true" />
+    <script src="~/site.js" asp-append-version="true" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Lewati navigasi</a>
+<header class="masthead">
+    <a class="brand" asp-page="/Index">boneiset<span>Register aset perusahaan</span></a>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="session"><a asp-page="/Account">@User.Identity.Name <span>/ @(User.IsInRole("Admin") ? "Admin" : "Viewer")</span></a>
+        <form method="post" asp-page="/Account" asp-page-handler="Logout"><button class="quiet" type="submit">Keluar</button></form></div>
+    }
+    else { <span class="edition">Windows 10 / 11</span> }
+</header>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <nav class="navigation" aria-label="Menu utama">
+        <a asp-page="/Index" aria-current="@(ViewData["Section"] as string == "assets" ? "page" : null)">01 / Aset</a>
+        <a asp-page="/Applications" aria-current="@(ViewData["Section"] as string == "apps" ? "page" : null)">02 / Aplikasi</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-page="/Enrollment" aria-current="@(ViewData["Section"] as string == "enroll" ? "page" : null)">03 / Pendaftaran</a>
+            <a asp-page="/Policy" aria-current="@(ViewData["Section"] as string == "policy" ? "page" : null)">04 / Kebijakan</a>
+            <a asp-page="/Users" aria-current="@(ViewData["Section"] as string == "users" ? "page" : null)">05 / Pengguna</a>
+            <a asp-page="/Audit" aria-current="@(ViewData["Section"] as string == "audit" ? "page" : null)">06 / Audit</a>
+        }
+    </nav>
+}
+<main id="main" tabindex="-1">
+    @if (Runtime.IsDevelopment()) { <p class="environment">Lingkungan pengembangan / bukan server produksi</p> }
+    @if (TempData["Notice"] is string notice) { <div class="notice" role="status">@notice</div> }
+    @RenderBody()
+</main>
+<footer><span>Boneiset / Pemantauan aset, bukan aktivitas pribadi.</span><span>Draf tampilan / belum ada arahan merek</span></footer>
+<p id="progress" class="progress" role="status" hidden>Mengirim permintaan...</p>
+</body>
+</html>

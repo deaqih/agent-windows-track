@@ -1,0 +1,24 @@
+@page
+@model UsersModel
+@{ ViewData["Title"] = "Pengguna"; ViewData["Section"] = "users"; }
+<div class="page-heading"><div><p class="eyebrow">05 / Akses dashboard</p><h1>Pengguna</h1><p>Admin mengelola aset dan akses. Viewer hanya melihat serta mengekspor data aset, termasuk riwayat lokasi.</p></div></div>
+<details class="create-user" open="@(ViewData.ModelState.ErrorCount > 0 ? "open" : null)"><summary>Tambah pengguna</summary>
+<form method="post" asp-page-handler="Create" class="form-grid">
+    <div asp-validation-summary="All" class="errors full" role="alert"></div>
+    <div><label asp-for="Username">Nama pengguna</label><input asp-for="Username" minlength="3" maxlength="100" autocomplete="off" required /><small>Huruf, angka, titik, @@, garis bawah, atau tanda hubung.</small></div>
+    <div><label asp-for="Password">Kata sandi awal</label><input asp-for="Password" type="password" minlength="14" maxlength="128" autocomplete="new-password" required /><small>14-128 karakter. Gunakan frasa sandi unik.</small></div>
+    <div><label asp-for="Role">Peran</label><select asp-for="Role"><option value="Viewer">Viewer / lihat dan ekspor</option><option value="Admin">Admin / kelola semua</option></select></div>
+    <div class="full"><button type="submit">Buat akun</button></div>
+</form></details>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Daftar pengguna"><table><thead><tr><th>Pengguna</th><th>Peran</th><th>Terakhir masuk</th><th>Status / tindakan</th></tr></thead><tbody>
+@foreach (var row in Model.Rows.EnumerateArray())
+{
+    <tr><td>@row.Text("username")</td><td>@row.Text("role")</td><td>@Display.Time(row.Text("last_login"))</td><td><span class="status @(row.Flag("enabled") ? "" : "warn")">@(row.Flag("enabled") ? "Aktif" : "Nonaktif")</span>
+    @if (row.Text("username") != User.Identity!.Name)
+    {
+        <form method="post" asp-page-handler="Status" class="inline-form"><input type="hidden" name="target" value="@row.Text("id")" /><input type="hidden" name="enabled" value="@(!row.Flag("enabled") ? "true" : "false")" /><label class="check"><input type="checkbox" name="confirm" value="true" required /> Konfirmasi</label><button class="quiet" type="submit">@(row.Flag("enabled") ? "Nonaktifkan" : "Aktifkan")</button></form>
+    }
+    else { <span class="cell-note">Akun Anda</span> }</td></tr>
+}
+</tbody></table></div>
+<nav class="pager" aria-label="Halaman pengguna">@if (Model.SafeOffset > 0) { <a asp-route-offset="@Math.Max(0, Model.SafeOffset - 200)">Sebelumnya</a> }<span>Halaman @(Model.SafeOffset / 200 + 1)</span>@if (Model.Rows.GetArrayLength() == 200) { <a asp-route-offset="@(Model.SafeOffset + 200)">Berikutnya</a> }</nav>

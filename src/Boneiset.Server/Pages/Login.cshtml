@@ -1,0 +1,24 @@
+@page
+@model LoginModel
+@{ ViewData["Title"] = "Masuk"; }
+<div class="login-grid">
+    <section class="login-intro">
+        <p class="eyebrow">Inventaris perusahaan</p>
+        <h1>Kenali aset.<br />Ketahui kondisinya.</h1>
+        <p>Nomor seri, penanggung jawab, aplikasi, dan riwayat lokasi dalam satu register.</p>
+        <dl class="cadence"><dt>15 menit</dt><dd>Target interval laporan agent. Komputer harus aktif dan terhubung.</dd></dl>
+        <p class="muted">Lokasi mengikuti izin Windows dan kemampuan perangkat. Koordinat bukan jaminan posisi real-time.</p>
+    </section>
+    <section class="login-form" aria-labelledby="login-title">
+        <h2 id="login-title">Masuk ke register</h2>
+        <p>Gunakan akun yang diberikan admin perusahaan.</p>
+        <form method="post">
+            <div asp-validation-summary="All" class="errors" role="alert"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+            <label asp-for="Username">Nama pengguna</label><input asp-for="Username" autocomplete="username" maxlength="100" required />
+            <label asp-for="Password">Kata sandi</label><input asp-for="Password" type="password" autocomplete="current-password" maxlength="128" required />
+            <button type="submit">Masuk</button>
+        </form>
+        <p class="muted">Belum ada akun? Admin server membuat akun pertama melalui panduan instalasi. Tidak ada kata sandi bawaan.</p>
+    </section>
+</div>

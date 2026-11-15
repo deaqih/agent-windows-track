@@ -1,0 +1,16 @@
+@page
+@model PolicyModel
+@{ ViewData["Title"] = "Kebijakan aplikasi"; ViewData["Section"] = "policy"; }
+<div class="page-heading"><div><p class="eyebrow">04 / Kebijakan</p><h1>Aplikasi yang perlu ditinjau</h1><p>Pencocokan nama lengkap tanpa membedakan huruf besar. Hanya memberi penanda; tidak memblokir atau menghapus aplikasi.</p></div></div>
+<form method="post" asp-page-handler="Add" class="filters"><div><label asp-for="Name">Nama lengkap aplikasi</label><input asp-for="Name" maxlength="500" required /></div><button type="submit">Tambahkan penanda</button></form>
+<div asp-validation-summary="All" class="errors" role="alert"></div>
+@if (Model.Rows.GetArrayLength() == 0) { <section class="empty"><h2>Belum ada penanda aplikasi.</h2><p>Tambahkan nama aplikasi sesuai kebijakan perusahaan.</p></section> }
+else
+{
+<div class="table-scroll" tabindex="0" role="region" aria-label="Kebijakan aplikasi"><table><thead><tr><th>Nama aplikasi</th><th>Dibuat</th><th>Hapus penanda</th></tr></thead><tbody>
+@foreach (var row in Model.Rows.EnumerateArray())
+{
+    <tr><td>@row.Text("name")</td><td>@Display.Time(row.Text("created_at"))</td><td><form method="post" asp-page-handler="Remove" class="inline-form"><input type="hidden" name="Name" value="@row.Text("name")" /><label class="check"><input type="checkbox" name="Confirm" value="true" required /> Konfirmasi</label><button class="quiet" type="submit">Hapus</button></form></td></tr>
+}
+</tbody></table></div>
+}

@@ -1,0 +1,10 @@
+@page
+@model AccountModel
+@{ ViewData["Title"] = "Akun"; }
+<div class="page-heading"><div><p class="eyebrow">Akun pribadi</p><h1>@User.Identity!.Name</h1><p>Sesi berlaku maksimal 8 jam. Ganti kata sandi untuk mengakhiri semua sesi lama.</p></div></div>
+<section class="narrow"><h2>Ganti kata sandi</h2><form method="post">
+<div asp-validation-summary="All" class="errors" role="alert"></div>
+<label asp-for="CurrentPassword">Kata sandi saat ini</label><input asp-for="CurrentPassword" type="password" maxlength="128" autocomplete="current-password" required />
+<label asp-for="NewPassword">Kata sandi baru</label><input asp-for="NewPassword" type="password" minlength="14" maxlength="128" autocomplete="new-password" required />
+<label asp-for="ConfirmPassword">Ulangi kata sandi baru</label><input asp-for="ConfirmPassword" type="password" minlength="14" maxlength="128" autocomplete="new-password" required />
+<button type="submit">Ganti kata sandi</button></form></section>

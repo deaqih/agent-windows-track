@@ -1,0 +1,102 @@
+@page "/devices/{id:guid}"
+@model DeviceModel
+@{ ViewData["Title"] = Model.Device.Text("machine_name"); ViewData["Section"] = "assets"; }
+<a asp-page="/Index" class="back">Kembali ke register</a>
+<div class="page-heading"><div><p class="eyebrow">@Model.Device.Text("asset_tag") / Detail perangkat</p><h1>@Model.Device.Text("machine_name")</h1><p>SN: @(Model.Inventory.Text("serial") is "" ? "Belum tersedia" : Model.Inventory.Text("serial"))</p></div>
+<span class="status @(Model.Device.Flag("revoked") ? "warn" : "")">@(Model.Device.Flag("revoked") ? "Akses agent dicabut" : Display.Lifecycle(Model.Device.Text("lifecycle")))</span></div>
+<div class="report-note"><strong>@Display.Location(Model.Device.Text("location_status"))</strong><span>Laporan dibuat @Display.Time(Model.Device.Text("last_captured"))<br />Diterima server @Display.Time(Model.Device.Text("last_received"))</span></div>
+<nav class="tabs" aria-label="Bagian perangkat">
+@foreach (var tab in new[] { ("overview", "Ringkasan"), ("locations", "Riwayat lokasi"), ("software", "Aplikasi"), ("events", "Perubahan aplikasi"), ("history", "Riwayat aset") })
+{
+    if (tab.Item1 == "history" && !Model.IsAdmin) continue;
+    <a asp-route-id="@Model.Id" asp-route-tab="@tab.Item1" aria-current="@(Model.Tab == tab.Item1 ? "page" : null)">@tab.Item2</a>
+}
+</nav>
+@if (Model.Tab == "overview")
+{
+    <div class="detail-grid"><section>
+        <h2>Spesifikasi terlapor</h2><p class="muted">Inventaris terakhir: @Display.Time(Model.Device.Text("inventory_at"))</p>
+        <dl class="specs">
+            @foreach (var field in new[] { ("manufacturer", "Produsen"), ("model", "Model"), ("hardwareUuid", "Hardware UUID"), ("cpu", "Prosesor"), ("osVersion", "Sistem operasi"), ("agentVersion", "Versi agent") })
+            { <div><dt>@field.Item2</dt><dd>@(Model.Inventory.Text(field.Item1) is "" ? "Belum tersedia" : Model.Inventory.Text(field.Item1))</dd></div> }
+            <div><dt>RAM</dt><dd>@Display.Size(Model.Inventory.Text("ramBytes"))</dd></div>
+            <div><dt>Penyimpanan</dt><dd>@Display.Size(Model.Inventory.Text("diskBytes"))</dd></div>
+            <div><dt>Terdaftar</dt><dd>@Display.Time(Model.Device.Text("enrolled_at"))</dd></div>
+        </dl>
+    </section><section>
+        <h2>Penempatan aset</h2>
+        @if (Model.IsAdmin)
+        {
+            <form method="post" asp-page-handler="Save" class="form-grid">
+                <div asp-validation-summary="All" class="errors full" role="alert"></div>
+                <div><label asp-for="Asset.AssetTag">Tag aset</label><input asp-for="Asset.AssetTag" maxlength="200" required /></div>
+                <div><label asp-for="Asset.OwnerName">Penanggung jawab</label><input asp-for="Asset.OwnerName" maxlength="200" /></div>
+                <div><label asp-for="Asset.Department">Divisi</label><input asp-for="Asset.Department" maxlength="200" /></div>
+                <div><label asp-for="Asset.Branch">Cabang</label><input asp-for="Asset.Branch" maxlength="200" /></div>
+                <div><label asp-for="Asset.Lifecycle">Status aset</label><select asp-for="Asset.Lifecycle">
+                    @foreach (var status in new[] { "Stock", "In use", "Loan", "Repair", "Lost", "Retired" }) { <option value="@status">@Display.Lifecycle(status)</option> }
+                </select></div><div class="full"><button type="submit">Simpan penempatan</button></div>
+            </form>
+        }
+        else
+        {
+            <dl class="specs">@foreach (var field in new[] { ("owner_name", "Penanggung jawab"), ("department", "Divisi"), ("branch", "Cabang"), ("lifecycle", "Status") })
+                { <div><dt>@field.Item2</dt><dd>@(Model.Device.Text(field.Item1) is "" ? "Belum ditetapkan" : field.Item1 == "lifecycle" ? Display.Lifecycle(Model.Device.Text(field.Item1)) : Model.Device.Text(field.Item1))</dd></div> }
+            </dl>
+        }
+    </section></div>
+    @if (Model.IsAdmin && !Model.Device.Flag("revoked"))
+    {
+        <details class="danger-zone"><summary>Cabut akses agent perangkat ini</summary>
+            <p>Pencabutan menghentikan penerimaan laporan, bukan mematikan komputer. Data lama tidak dihapus. Perangkat harus didaftarkan ulang untuk mengirim laporan lagi.</p>
+            <form method="post" asp-page-handler="Revoke"><label class="check"><input asp-for="ConfirmRevoke" required /> Saya memahami bahwa laporan berikutnya akan ditolak.</label><button class="danger" type="submit">Cabut akses agent</button></form>
+        </details>
+    }
+}
+else
+{
+    @if (Model.Tab == "locations")
+    { <h2>Pengukuran lokasi / @Model.Retention hari terakhir</h2><p>Koordinat historis, bukan posisi langsung. Akurasi dalam meter; sumber dilaporkan agent. Tidak dikirim ke penyedia peta eksternal.</p> }
+    @if (Model.Tab == "software") { <h2>Aplikasi terdeteksi</h2><p>Hanya cakupan yang berhasil dipindai. Pemindaian parsial tidak membuktikan aplikasi sudah dihapus.</p> }
+    @if (Model.Tab == "events") { <h2>Perubahan yang teramati</h2><p>Waktu deteksi bukan waktu instalasi atau penghapusan yang pasti.</p> }
+    @if (Model.Tab == "history") { <h2>Riwayat penempatan dan tindakan</h2> }
+    @if (Model.Rows.GetArrayLength() == 0) { <section class="empty"><h2>Belum ada data pada bagian ini.</h2><p>Data muncul setelah laporan atau perubahan terkait diterima.</p></section> }
+    else
+    {
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Riwayat perangkat"><table>
+        @if (Model.Tab == "locations")
+        {
+            <thead><tr><th>Diukur</th><th>Lintang / bujur</th><th>Akurasi / sumber</th><th>Laporan diterima</th></tr></thead><tbody>
+            @foreach (var row in Model.Rows.EnumerateArray())
+            { <tr><td>@Display.Time(row.Text("measured_at"))</td><td class="serial">@row.Text("latitude"), @row.Text("longitude")</td><td>@row.Text("accuracy") m<span class="cell-note">@row.Text("source")</span></td><td>@Display.Time(row.Text("received_at"))</td></tr> }
+            </tbody>
+        }
+        else if (Model.Tab == "software")
+        {
+            <thead><tr><th>Aplikasi</th><th>Versi / penerbit</th><th>Cakupan</th><th>Terakhir terlihat</th></tr></thead><tbody>
+            @foreach (var row in Model.Rows.EnumerateArray())
+            { <tr><td>@row.Text("name") @if (row.Flag("policy_warning")) { <span class="warning">Perlu ditinjau</span> }</td><td>@row.Text("version")<span class="cell-note">@row.Text("publisher")</span></td><td>@row.Text("scope")<span class="cell-note">@(row.Flag("scan_complete") ? "Pemindaian lengkap" : "Pemindaian parsial")</span></td><td>@Display.Time(row.Text("last_seen"))</td></tr> }
+            </tbody>
+        }
+        else if (Model.Tab == "events")
+        {
+            <thead><tr><th>Diamati</th><th>Aplikasi</th><th>Perubahan</th><th>Detail</th></tr></thead><tbody>
+            @foreach (var row in Model.Rows.EnumerateArray())
+            { <tr><td>@Display.Time(row.Text("observed_at"))</td><td>@row.Text("name")<span class="cell-note">@row.Text("scope")</span></td><td>@Display.Event(row.Text("kind"))</td><td>@row.Text("detail")</td></tr> }
+            </tbody>
+        }
+        else
+        {
+            <thead><tr><th>Waktu</th><th>Pelaku</th><th>Tindakan / detail</th></tr></thead><tbody>
+            @foreach (var row in Model.Rows.EnumerateArray())
+            { <tr><td>@Display.Time(row.Text("at"))</td><td>@row.Text("actor")</td><td>@row.Text("action")<details><summary>Lihat perubahan</summary><pre>@row.Text("detail")</pre></details></td></tr> }
+            </tbody>
+        }
+        </table></div>
+    }
+    <nav class="pager" aria-label="Halaman riwayat">
+        @if (Model.SafeOffset > 0) { <a asp-route-id="@Model.Id" asp-route-tab="@Model.Tab" asp-route-offset="@Math.Max(0, Model.SafeOffset - 200)">Sebelumnya</a> }
+        <span>Halaman @(Model.SafeOffset / 200 + 1) / maksimal 200 baris</span>
+        @if (Model.Rows.GetArrayLength() == 200) { <a asp-route-id="@Model.Id" asp-route-tab="@Model.Tab" asp-route-offset="@(Model.SafeOffset + 200)">Berikutnya</a> }
+    </nav>
+}

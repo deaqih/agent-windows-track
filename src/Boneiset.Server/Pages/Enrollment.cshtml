@@ -1,0 +1,19 @@
+@page
+@model EnrollmentModel
+@{ ViewData["Title"] = "Pendaftaran perangkat"; ViewData["Section"] = "enroll"; }
+<div class="page-heading"><div><p class="eyebrow">03 / Pendaftaran</p><h1>Hubungkan perangkat perusahaan</h1><p>Satu token untuk satu perangkat. Berlaku 60 menit dan hanya dapat digunakan sekali.</p></div></div>
+<div class="detail-grid"><section>
+<h2>Buat token pendaftaran</h2>
+<form method="post"><div asp-validation-summary="All" class="errors" role="alert"></div>
+<label class="check"><input asp-for="Authorized" required /> Saya berwenang mendaftarkan perangkat ini dan sudah mengikuti kebijakan pemberitahuan serta izin lokasi perusahaan.</label>
+<button type="submit">Buat token sekali pakai</button></form>
+@if (Model.Token is not null)
+{
+    <section class="token-result" role="status"><h2>Token berhasil dibuat</h2><label for="device-token">Salin token dan berikan kepada petugas pemasangan</label><textarea id="device-token" rows="3" readonly spellcheck="false">@Model.Token</textarea><p>Simpan sekarang. Token tidak dapat ditampilkan kembali setelah meninggalkan halaman ini. Jangan kirim melalui kanal publik.</p></section>
+}
+</section><aside class="explanation"><h2>Sebelum pemasangan</h2>
+<p>Server tujuan produksi: <code>https://boneiset.awancode.com</code></p>
+<p class="warning">Agent dan pemasang Windows belum tersedia pada tahap ini. Token dapat dipakai oleh API uji, bukan berarti perangkat sudah terpasang.</p>
+<p>Pelaporan dirancang setiap 15 menit; inventaris aplikasi diperbarui harian. Laporan tertunda saat perangkat mati, tidur, atau tidak terhubung.</p>
+<p>Lokasi memerlukan dukungan perangkat dan izin Windows. Dashboard tidak meminta atau mengambil lokasi komputer yang membuka halaman ini.</p>
+</aside></div>

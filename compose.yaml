@@ -1,0 +1,28 @@
+services:
+  server:
+    build: .
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Database: ${DATABASE_CONNECTION_STRING:?Set DATABASE_CONNECTION_STRING}
+      AdminApiKey: ${ADMIN_API_KEY:?Set ADMIN_API_KEY}
+      PublicUrl: https://boneiset.awancode.com
+      TrustedProxy: ${TRUSTED_PROXY:?Set TRUSTED_PROXY}
+      LocationRetentionDays: 30
+      OfflineAfterMinutes: 60
+      DataProtection__KeyPath: /app/keys
+    volumes:
+      - dashboard_keys:/app/keys
+    ports:
+      - "127.0.0.1:${BONEISET_HTTP_PORT:-5087}:8080"
+    networks: [database]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+networks:
+  database:
+    external: true
+    name: ${POSTGRES_NETWORK:?Set POSTGRES_NETWORK}
+
+volumes:
+  dashboard_keys:

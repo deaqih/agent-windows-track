@@ -1,0 +1,23 @@
+@page
+@model ApplicationsModel
+@{ ViewData["Title"] = "Aplikasi terpasang"; ViewData["Section"] = "apps"; }
+<div class="page-heading"><div><p class="eyebrow">02 / Inventaris perangkat lunak</p><h1>Aplikasi terpasang</h1><p>Hasil pemindaian terakhir, bukan pantauan penggunaan aplikasi.</p></div></div>
+<form method="get" class="filters"><div><label asp-for="Query">Nama aplikasi</label><input asp-for="Query" maxlength="200" placeholder="Cari nama aplikasi" /></div><button type="submit">Cari aplikasi</button><a asp-page="/Applications">Reset</a></form>
+<p class="muted">@Model.Rows.GetArrayLength() hasil pada halaman ini. Pemindaian parsial tidak membuktikan aplikasi telah dihapus.</p>
+@if (Model.Rows.GetArrayLength() == 0) { <section class="empty"><h2>Belum ada aplikasi yang cocok.</h2><p>Inventaris muncul setelah agent mengirim hasil pemindaian.</p></section> }
+else
+{
+<div class="table-scroll" tabindex="0" role="region" aria-label="Inventaris aplikasi"><table>
+<thead><tr><th>Aplikasi / penerbit</th><th>Versi</th><th>Perangkat</th><th>Cakupan</th><th>Terakhir terlihat</th></tr></thead>
+<tbody>@foreach (var row in Model.Rows.EnumerateArray())
+{
+    <tr><td><strong>@row.Text("name")</strong><span class="cell-note">@row.Text("publisher")</span>@if (row.Flag("policy_warning")) { <span class="warning">Perlu ditinjau</span> }</td><td>@row.Text("version")</td>
+    <td><a asp-page="/Device" asp-route-id="@row.Text("device_id")" asp-route-tab="software">@row.Text("machine_name")</a><span class="cell-note">@row.Text("asset_tag")</span></td>
+    <td>@row.Text("scope")<span class="cell-note">@(row.Flag("scan_complete") ? "Pemindaian lengkap" : "Pemindaian parsial")</span></td><td>@Display.Time(row.Text("last_seen"))</td></tr>
+}</tbody></table></div>
+}
+<nav class="pager" aria-label="Halaman aplikasi">
+@if (Model.SafeOffset > 0) { <a asp-route-offset="@Math.Max(0, Model.SafeOffset - 200)" asp-route-query="@Model.Query">Sebelumnya</a> }
+<span>Halaman @(Model.SafeOffset / 200 + 1) / maksimal 200 baris</span>
+@if (Model.Rows.GetArrayLength() == 200) { <a asp-route-offset="@(Model.SafeOffset + 200)" asp-route-query="@Model.Query">Berikutnya</a> }
+</nav>

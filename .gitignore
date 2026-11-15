@@ -1,0 +1,9 @@
+.tools/
+.local/
+**/bin/
+**/obj/
+artifacts/
+.env
+*.user
+*.log
+secrets/

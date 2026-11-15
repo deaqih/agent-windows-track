@@ -1,0 +1,12 @@
+services:
+  server:
+    ports: !reset []
+    networks:
+      database:
+      proxy:
+        aliases: [boneiset-server]
+
+networks:
+  proxy:
+    external: true
+    name: ${NGINX_NETWORK:?Set NGINX_NETWORK}

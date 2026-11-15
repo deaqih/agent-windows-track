@@ -1,0 +1,39 @@
+@page
+@model IndexModel
+@{ ViewData["Title"] = "Register aset"; ViewData["Section"] = "assets"; }
+<div class="page-heading"><div><p class="eyebrow">01 / Inventaris</p><h1>Register aset</h1><p>Cari perangkat, periksa laporan, kelola penanggung jawab.</p></div>
+@if (Model.IsAdmin) { <a class="button" asp-page="/Enrollment">Daftarkan perangkat</a> }</div>
+<aside class="report-note"><strong>Target laporan: 15 menit</strong><span>Ditandai terlambat setelah @Model.OfflineMinutes menit. Tidak ada laporan saat komputer mati atau tanpa koneksi.</span></aside>
+<form method="get" class="filters">
+    <div><label asp-for="Query">Cari aset</label><input asp-for="Query" placeholder="Nomor seri, perangkat, tag, pemilik" maxlength="200" /></div>
+    <div><label asp-for="Branch">Cabang (nama lengkap)</label><input asp-for="Branch" placeholder="Semua cabang" maxlength="200" /></div>
+    <button type="submit">Tampilkan</button><a asp-page="/Index">Reset</a>
+</form>
+<div asp-validation-summary="All" class="errors" role="alert"></div>
+<div class="table-heading"><h2>@Model.Rows.GetArrayLength() aset pada halaman ini</h2>
+<form method="post" asp-page-handler="Export" data-download><input type="hidden" asp-for="Query" /><input type="hidden" asp-for="Branch" /><button class="secondary" type="submit">Ekspor CSV</button></form></div>
+@if (Model.Rows.GetArrayLength() == 0)
+{
+    <section class="empty"><h2>Belum ada aset yang cocok.</h2><p>Ubah pencarian, atau daftarkan perangkat perusahaan melalui admin. Data tidak dibuat otomatis.</p></section>
+}
+else
+{
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Daftar aset"><table>
+        <thead><tr><th scope="col">Perangkat / nomor seri</th><th scope="col">Penanggung jawab</th><th scope="col">Laporan</th><th scope="col">Lokasi terakhir</th><th scope="col">Status aset</th></tr></thead>
+        <tbody>@foreach (var row in Model.Rows.EnumerateArray())
+        {
+            <tr><td><a class="asset-link" asp-page="/Device" asp-route-id="@row.Text("id")">@row.Text("machine_name")</a><span class="cell-note">@row.Text("asset_tag")</span><span class="serial">SN: @(row.Text("serial") is "" ? "Belum tersedia" : row.Text("serial"))</span>
+                @if (row.Flag("duplicate_serial")) { <span class="warning">Nomor seri duplikat</span> }
+                @if (row.Flag("software_warning")) { <span class="warning">Aplikasi perlu ditinjau</span> }</td>
+            <td>@(row.Text("owner_name") is "" ? "Belum ditetapkan" : row.Text("owner_name"))<span class="cell-note">@row.Text("branch") / @row.Text("department")</span></td>
+            <td><span class="status @(row.Flag("revoked") || row.Flag("overdue") ? "warn" : "")">@(row.Flag("revoked") ? "Akses dicabut" : row.Flag("overdue") ? "Laporan terlambat" : "Laporan diterima")</span><span class="cell-note">@Display.Time(row.Text("last_received"))</span></td>
+            <td>@(row.Text("location_status") == "available" && row.Text("measured_at") == "" ? "Koordinat tidak tersimpan pada periode ini" : Display.Location(row.Text("location_status")))<span class="cell-note">Pengukuran: @Display.Time(row.Text("measured_at"))</span><span class="cell-note">Riwayat, bukan posisi langsung</span></td>
+            <td>@Display.Lifecycle(row.Text("lifecycle"))</td></tr>
+        }</tbody>
+    </table></div>
+}
+<nav class="pager" aria-label="Halaman aset">
+    @if (Model.SafeOffset > 0) { <a asp-route-offset="@Math.Max(0, Model.SafeOffset - 200)" asp-route-query="@Model.Query" asp-route-branch="@Model.Branch">Sebelumnya</a> }
+    <span>Halaman @(Model.SafeOffset / 200 + 1) / maksimal 200 baris</span>
+    @if (Model.Rows.GetArrayLength() == 200) { <a asp-route-offset="@(Model.SafeOffset + 200)" asp-route-query="@Model.Query" asp-route-branch="@Model.Branch">Berikutnya</a> }
+</nav>

@@ -1,0 +1,17 @@
+@page
+@model AuditModel
+@{ ViewData["Title"] = "Jejak audit"; ViewData["Section"] = "audit"; }
+<div class="page-heading"><div><p class="eyebrow">06 / Jejak perubahan</p><h1>Audit</h1><p>Aktivitas akun, pendaftaran, penempatan, kebijakan, dan pencabutan akses. Semua waktu dalam UTC.</p></div></div>
+@if (Model.Rows.GetArrayLength() == 0) { <section class="empty"><h2>Belum ada aktivitas tercatat.</h2><p>Perubahan berikutnya akan muncul di sini.</p></section> }
+else
+{
+<div class="table-scroll" tabindex="0" role="region" aria-label="Jejak audit"><table><thead><tr><th>Waktu</th><th>Pelaku</th><th>Tindakan</th><th>Detail</th></tr></thead><tbody>
+@foreach (var row in Model.Rows.EnumerateArray())
+{
+    <tr><td>@Display.Time(row.Text("at"))</td><td>@row.Text("actor")</td><td>@row.Text("action")
+    @if (row.Text("device_id") is not "") { <span class="cell-note"><a asp-page="/Device" asp-route-id="@row.Text("device_id")">Buka perangkat</a></span> }</td>
+    <td><details><summary>Lihat detail</summary><pre>@row.Text("detail")</pre></details></td></tr>
+}
+</tbody></table></div>
+}
+<nav class="pager" aria-label="Halaman audit">@if (Model.SafeOffset > 0) { <a asp-route-offset="@Math.Max(0, Model.SafeOffset - 200)">Sebelumnya</a> }<span>Halaman @(Model.SafeOffset / 200 + 1) / maksimal 200 baris</span>@if (Model.Rows.GetArrayLength() == 200) { <a asp-route-offset="@(Model.SafeOffset + 200)">Berikutnya</a> }</nav>
